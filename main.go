@@ -267,6 +267,7 @@ func generalGORMUser() {
 
 func movieGorm() {
 	db := ConnectSQL()
+	db.AutoMigrate(&Movies{})
 	var GenreRating []MovieGenreRating
 
 	err := db.Model(&Movies{}).Select("Genre,AVG(IMDB_Rating) as AVG_IMDB_Rating").Group("Genre").Find(&GenreRating).Error
@@ -287,20 +288,29 @@ func movieGorm() {
 		fmt.Println("Erro while querying,", err.Error())
 	}
 	fmt.Println(distGenre)
-	// fmt.Println(GenreRating)
-	// rows, err := db.Table("having_Table").Select("Genre, AVG(IMDB_Rating) as AVG_IMDB_Rating").Group("Genre").Having(" AVG_IMDB_Rating >=  ?", 8.00).Find(&GenreRating).Rows()
+
+	//******************************* Update single value of a column ****************************
+	// err = db.Model(&Movies{}).Where("movie_name = ?", "Joy Baba Felunath").Update("movie_name", "Joi Baba Felunath").Error
 	// if err != nil {
-	// 	fmt.Println("Erro while querying,", err.Error())
+	// 	fmt.Println("Error while updating single value of a column,", err.Error())
 	// }
-	// defer rows.Close()
-	// var (
-	// 	Genre  string
-	// 	rating float64
-	// )
-	// for rows.Next() {
-	// 	Genre, avg_rat := rows.Scan(&Genre, &rating)
+
+	//********************************** Update multiple column value(without selecting fields--with condition) ****************************
+	// When updating with struct, GORM will only update non-zero fields.
+	//so updating with struct is not preferred, use map[string]interface{}
+
+	// err = db.Model(&Movies{}).Where("id = ?", 6).Updates(map[string]interface{}{"movie_name": "Joy BabaFelunath", "imdb_rating": 8, "director": "Saytajit Ray"}).Error
+	// if err != nil {
+	// 	fmt.Println("Error while updating multiple column value,", err.Error())
 	// }
-	// fmt.Println(GenreRating)
+
+	//********************************** Update multiple column value(Selecting fields--with condition) ****************************
+	// err = db.Model(&Movies{}).Where("id = ?", 6).Select("director", "imdb_rating").Updates(map[string]interface{}{"imdb_rating": 8, "director": "Saytajit Ray"}).Error
+	// if err != nil {
+	// 	fmt.Println("Error while updating multiple column value,", err.Error())
+	// }
+	//********************************** updating by GORM.EXPR() -- with sql expression ***************************************************
+	// db.Model(&Movies{}).Where("id = ?", 6).Update("imdb_rating", gorm.Expr("imdb_rating / ?", 2))
 }
 
 type NanmeAge struct {
